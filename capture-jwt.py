@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# capture-jwt.py â runner ä¾§ JWT æè·çå¬å¨ (127.0.0.1:18080)
-# iOS æ¨¡æå¨ä¸å®¿ä¸»å±äº« loopback, app å SDK è¿ 127.0.0.1:18080 ç´è¾¾æ¬çå¬å¨
+# capture-jwt.py — runner 侧 JWT 捕获监听器 (127.0.0.1:18080)
+# iOS 模拟器与宿主共享 loopback, app 内 SDK 连 127.0.0.1:18080 直达本监听器
 import http.server, json, sys, threading
 
 CAPTURED = []
@@ -14,7 +14,7 @@ class H(http.server.BaseHTTPRequestHandler):
                'body': body[:600]}
         CAPTURED.append(rec)
         print('\n' + '=' * 64)
-        print('  [ATTACKER-LISTENER] å¤å¸¦æè·:')
+        print('  [ATTACKER-LISTENER] 外带捕获:')
         print('    ' + rec['method'] + ' ' + rec['path'])
         print('    Authorization: ' + rec['authorization'][:120])
         if rec['body']:
