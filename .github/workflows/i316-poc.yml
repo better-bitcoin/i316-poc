@@ -34,6 +34,10 @@ jobs:
       - name: Install SDK (tag 15.2.0, 含官方模拟器 slice)
         run: pod install
 
+      - name: Dump FeatureFlagManager signature (诊断)
+        if: always()
+        run: grep -rn "FeatureFlagManager" Pods/ --include="*.swiftinterface" | head -20 || true
+
       - name: Build for iOS Simulator (免签名)
         run: |
           xcodebuild -workspace PoC.xcworkspace -scheme PoC \
