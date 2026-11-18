@@ -1,60 +1,60 @@
-# START HERE â é¶ iOS åºç¡æä½æå (Windows ç¨æ·å¨ç¨å¯å®æ)
+# START HERE — 零 iOS 基础操作指南 (Windows 用户全程可完成)
 
-## ä½ æä¸çä¸è¥¿ï¼i316-poc/ ç®å½ï¼å¨é¨é½äºï¼
+## 你手上的东西（i316-poc/ 目录，全部齐了）
 
 ```
 i316-poc/
-âââ .github/workflows/i316-poc.yml   â CI å·¥ä½æµ (æ¹æ¾è¿ä¸ªè·¯å¾!)
-âââ PoC/AppDelegate.swift            â æ¼ç¤º app å¨é¨ä»£ç  (å·²å¯ç¼è¯)
-âââ project.yml                      â XcodeGen å·¥ç¨å®ä¹
-âââ Podfile                          â SDK ä¾èµ (å®æ¹ tag 15.2.0)
-âââ capture-jwt.py                   â æ»å»èçå¬å¨
-âââ SUBMISSION-i316.md               â H1 æ¥åæ­£ææ¨¡æ¿
-âââ README-START-HERE.md             â æ¬æä»¶
+├── .github/workflows/i316-poc.yml   ← CI 工作流 (改放这个路径!)
+├── PoC/AppDelegate.swift            ← 演示 app 全部代码 (已可编译)
+├── project.yml                      ← XcodeGen 工程定义
+├── Podfile                          ← SDK 依赖 (官方 tag 15.2.0)
+├── capture-jwt.py                   ← 攻击者监听器
+├── SUBMISSION-i316.md               ← H1 报告正文模板
+└── README-START-HERE.md             ← 本文件
 ```
 
-**app å¨åªï¼** app ä¸æ¯ç°æçäºè¿å¶ââå®ç±è¿å¥æä»¶å¨ CI ç Mac ä¸**èªå¨çæ**ï¼ä½ ç Windows ä¸ä¸è£ä»»ä½ä¸è¥¿ï¼ã
+**app 在哪？** app 不是现成的二进制——它由这套文件在 CI 的 Mac 上**自动生成**（你的 Windows 上不装任何东西）。
 
-## äºæ­¥èµ°ï¼å¨ç¨ç½é¡µæä½ï¼
+## 五步走（全程网页操作）
 
-### ç¬¬ 1 æ­¥ï¼å»ºä»åºï¼2 åéï¼
-1. æå¼ github.com â å³ä¸è§ + â **New repository**
-2. åå­ `i316-poc`ï¼é **Private**ï¼å«æ¼æ´ PoCï¼åå«å¬å¼ï¼
+### 第 1 步：建仓库（2 分钟）
+1. 打开 github.com → 右上角 + → **New repository**
+2. 名字 `i316-poc`，选 **Private**（含漏洞 PoC，先别公开）
 3. Create
 
-### ç¬¬ 2 æ­¥ï¼ä¸ä¼ æä»¶ï¼3 åéï¼
-1. ä»åºé¡µ â **Add file â Upload files**
-2. ææ¬å° `i316-poc` éçæä»¶**æç®å½ç»æ**æè¿å»ï¼æ³¨æ `i316-poc.yml` è¦æ¾å¨ `.github/workflows/` ç®å½ä¸ââå¨ç½é¡µä¸ä¼ æ¶ç´æ¥æè¿ç¼è¾å¨åå»ºè¯¥è·¯å¾ï¼
+### 第 2 步：上传文件（3 分钟）
+1. 仓库页 → **Add file → Upload files**
+2. 把本地 `i316-poc` 里的文件**按目录结构**拖进去（注意 `i316-poc.yml` 要放在 `.github/workflows/` 目录下——在网页上传时直接拖进编辑器创建该路径）
 3. Commit
 
-### ç¬¬ 3 æ­¥ï¼å¡«ç§æ·åæ°ï¼2 åéï¼
-1. æå¼ä½ ç bb-future ç§æ· Admin Center â Channels â Messaging â ä½ ç messaging integration
-2. å¤å¶ **appId** å **integrationId**ï¼SunCo key é¡µé¢è¿æ key id/secretï¼PoC ç¨ä¸å° secretï¼
-3. GitHub ä»åº â Code é¡µ â ç¼è¾ `project.yml`ï¼æ `REPLACE_WITH_APP_ID` / `REPLACE_WITH_INTEGRATION_ID` æ¢æçå¼
-4. `ZDK_BASE_URL` / `ZDK_SETTINGS_BASE_URL` å¡«çå®ç«¯ç¹ï¼ä½ æ¥åé f248 é¾è·¯åæçè¯·æ±ååå°±æ¯å®ä»¬ââä½ æè¿çï¼
+### 第 3 步：填租户参数（2 分钟）
+1. 打开你的 bb-future 租户 Admin Center → Channels → Messaging → 你的 messaging integration
+2. 复制 **appId** 和 **integrationId**（SunCo key 页面还有 key id/secret，PoC 用不到 secret）
+3. GitHub 仓库 → Code 页 → 编辑 `project.yml`，把 `REPLACE_WITH_APP_ID` / `REPLACE_WITH_INTEGRATION_ID` 换成真值
+4. `ZDK_BASE_URL` / `ZDK_SETTINGS_BASE_URL` 填真实端点（你报告里 f248 链路分析的请求域名就是它们——你抓过的）
 
-### ç¬¬ 4 æ­¥ï¼è· CIï¼10 åéï¼
-1. ä»åº â **Actions** æ ç­¾ â å·¦ä¾§ `i316-simulator-poc` â **Run workflow**
-2. ç­ç»¿å¾ï¼é¦æ¬¡ç¼è¯å¦æ¥éï¼æéè¯¯ log åç»æï¼æéæ¡ä¿®ââå·²æ æ³¨ 3 ä¸ªé£é©ç¹ R1/R2/R3ï¼
-3. è·å®åè¯¥æ¬¡ run é¡µåºé¨ **Artifacts** â ä¸è½½ `i316-capture`ï¼
-   - `poc-evidence.mp4` â **æ¨¡æå¨å±å¹å½åï¼è¿å°±æ¯å¯è§åè¯æ®ï¼**
-   - `captured-jwt.json` â æè·å°ç JWT
-   - `listener.log` â æ»å»èçå¬å¨è¾åº
+### 第 4 步：跑 CI（10 分钟）
+1. 仓库 → **Actions** 标签 → 左侧 `i316-simulator-poc` → **Run workflow**
+2. 等绿勾（首次编译如报错，把错误 log 发给我，我逐条修——已标注 3 个风险点 R1/R2/R3）
+3. 跑完后该次 run 页底部 **Artifacts** → 下载 `i316-capture`：
+   - `poc-evidence.mp4` ← **模拟器屏幕录像（这就是可视化证据）**
+   - `captured-jwt.json` ← 捕获到的 JWT
+   - `listener.log` ← 攻击者监听器输出
 
-### ç¬¬ 5 æ­¥ï¼æäº¤
-1. `SUBMISSION-i316.md` åå®¹ç²å° HackerOne â Zendesk program â é **Front End** scopeï¼Mobile SDK iOSï¼
-2. `poc-evidence.mp4` ä¸ä¼ ä¸º attachment
+### 第 5 步：提交
+1. `SUBMISSION-i316.md` 内容粘到 HackerOne → Zendesk program → 选 **Front End** scope（Mobile SDK iOS）
+2. `poc-evidence.mp4` 上传为 attachment
 3. Submit
 
-## äº¤äºæ­¥éª¤æä¹å½è¿è§é¢ï¼
+## 交互步骤怎么录进视频？
 
-CI é app æ¯èªå¨å¯å¨çï¼ä¸¤ä¸ªæé®ï¼ç¹å»éä»¶ / pause+resumeï¼éè¦äººç¹ãä¸ä¸ªéé¡¹ï¼
-- **æç®å**ï¼æ¬æº Mac æå Mac æå¼å·¥ç¨ï¼Xcode éç¹ Simulator äº²æç¹æé® + QuickTime å½å±
-- **CI èªå¨å**ï¼å ä¸ä¸ª XCUITest èªå¨ç¹æé®ï¼æå¯ä»¥å¸®ä½ åï¼
-- **Appetize.io**ï¼æ CI äº§åºç `PoC.app` ä¸ä¼  appetize.ioï¼ä½ å¨ Windows æµè§å¨éäº²æç¹ï¼åè´¹é¢åº¦å¤ç¨ä¸æ¬¡æ¼ç¤ºï¼
+CI 里 app 是自动启动的，两个按钮（点击附件 / pause+resume）需要人点。三个选项：
+- **最简单**：本机 Mac 或借 Mac 打开工程，Xcode 里点 Simulator 亲手点按钮 + QuickTime 录屏
+- **CI 自动化**：加一个 XCUITest 自动点按钮（我可以帮你写）
+- **Appetize.io**：把 CI 产出的 `PoC.app` 上传 appetize.io，你在 Windows 浏览器里亲手点（免费额度够用一次演示）
 
-## å·²æ æ³¨çä¸ä¸ªç¼è¯é£é©ç¹ï¼é¦æ¬¡è·æ¥éå°±å log ç»æï¼
+## 已标注的三个编译风险点（首次跑报错就发 log 给我）
 
-- **R1**: `FeatureFlagManager()` ç init å½¢ç¶å¨ swiftinterface éæ²¡æ´é²
-- **R2**: `ZDK_BASE_URL` / `ZDK_SETTINGS_BASE_URL` çå®ç«¯ç¹å¼ï¼ä¸å¡«å¯¹å SDK è¿ä¸ä¸ãäºä»¶ä¸è§¦åï¼
-- **R3**: f248 è§¦åè°ç¨ï¼`processAttachmentTrigger`ï¼ââæä½ æ¥å f248 ç« èå¡«å¥
+- **R1**: `FeatureFlagManager()` 的 init 形状在 swiftinterface 里没暴露
+- **R2**: `ZDK_BASE_URL` / `ZDK_SETTINGS_BASE_URL` 真实端点值（不填对则 SDK 连不上、事件不触发）
+- **R3**: f248 触发调用（`processAttachmentTrigger`）——按你报告 f248 章节填入
