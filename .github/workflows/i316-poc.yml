@@ -1,14 +1,14 @@
-# .github/workflows/i316-poc.yml â i316 è¿ç¨æ¨¡æå¨éªè¯ (private repo ä¹å¯è·, åè´¹ macOS é¢åº¦å¤ç¨)
+# .github/workflows/i316-poc.yml — i316 远程模拟器验证 (private repo 也可跑, 免费 macOS 额度够用)
 #
-# å·²æ ¸å®äºå®:
-#   - tag 15.2.0 ç xcframework å« ios-arm64_x86_64-simulator slice (main åæ¯ç²¾ç®æäº)
-#   - podspec s.source = git tag 15.2.0 â pod install æå³å¾å®æ¹æ¨¡æå¨ slice
-#   - macos-14 runner = Apple Silicon, Xcode é¢è£
-#   - iOS æ¨¡æå¨ä¸ runner å®¿ä¸»å±äº« loopback â app è¿ 127.0.0.1:18080 ç´è¾¾çå¬å¨
+# 已核实事实:
+#   - tag 15.2.0 的 xcframework 含 ios-arm64_x86_64-simulator slice (main 分支精简掉了)
+#   - podspec s.source = git tag 15.2.0 → pod install 拉即得官方模拟器 slice
+#   - macos-14 runner = Apple Silicon, Xcode 预装
+#   - iOS 模拟器与 runner 宿主共享 loopback → app 连 127.0.0.1:18080 直达监听器
 #
-# è¯æ®äº§åº: poc-evidence.mp4 (æ¨¡æå¨å±å¹å½å) + captured-jwt.json + listener.log
+# 证据产出: poc-evidence.mp4 (模拟器屏幕录像) + captured-jwt.json + listener.log
 #
-# ä½¿ç¨æ¹æ³: æ¾å°ä»åº .github/workflows/i316-poc.yml, Actions é¡µæå¨è§¦å (workflow_dispatch)
+# 使用方法: 放到仓库 .github/workflows/i316-poc.yml, Actions 页手动触发 (workflow_dispatch)
 
 name: i316-simulator-poc
 on:
@@ -33,23 +33,23 @@ jobs:
           brew install xcodegen
           xcodegen generate
 
-      - name: Install SDK (tag 15.2.0, å«å®æ¹æ¨¡æå¨ slice)
+      - name: Install SDK (tag 15.2.0, 含官方模拟器 slice)
         run: pod install
 
-      - name: Build for iOS Simulator (åç­¾å)
+      - name: Build for iOS Simulator (免签名)
         run: |
           xcodebuild -workspace PoC.xcworkspace -scheme PoC \
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
             -derivedDataPath dd build CODE_SIGNING_ALLOWED=NO
 
-      - name: Launch on headless simulator + record screen (è¯æ®è§é¢)
+      - name: Launch on headless simulator + record screen (证据视频)
         run: |
           xcrun simctl boot "iPhone 15" 2>/dev/null || true
           xcrun simctl install booted dd/Build/Products/Debug-iphonesimulator/PoC.app
           nohup xcrun simctl io booted recordVideo --codec h264 poc-evidence.mp4 >/dev/null 2>&1 &
           echo $! > recorder.pid
           xcrun simctl launch booted com.poc.i316
-          sleep 120   # çç» SDK è¿æ¥ + è§å¯èäºä»¶; äº¤äºæ­¥éª¤ (ç¹å»æé®) å¦éèªå¨åç¨åç»­ simctl/XCUITest
+          sleep 120   # 留给 SDK 连接 + 观察者事件; 交互步骤 (点击按钮) 如需自动化用后续 simctl/XCUITest
 
       - name: Show capture result
         run: |
