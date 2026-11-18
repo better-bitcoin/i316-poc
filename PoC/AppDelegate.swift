@@ -121,7 +121,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         vc.log("④ builder.setup(authDelegate:) — 与真实商家 app 集成方式一致")
 
         let params = SettingsParameters(config: config,
-                                        featureFlagManager: FeatureFlagManager())   // 风险点 R1
+                                        featureFlagManager: FeatureFlagManager(hipaaAttachmentFlag: false))
         let theKit = builder.build(with: params, callbackQueue: .main)
         kit = theKit
         vc.log("⑤ kit built — 等待 persistedUserRetrieved / 连接事件")
