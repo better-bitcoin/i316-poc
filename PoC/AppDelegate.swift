@@ -127,7 +127,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         vc.log("⑤ kit built — 等待 persistedUserRetrieved / 连接事件")
 
         // resume 按钮: 触发 realtime 重连 (re-auth 路径)
-        vc.onResumeHook = { theKit?.pause(); theKit?.resume() }
+        vc.onResumeHook = { theKit.pause(); theKit.resume() }
 
         // 事件观察 — persistedUserRetrieved 直接展示"SDK 从持久化加载 User"
         kit?.addEventObserver(self) { [weak vc] event in
