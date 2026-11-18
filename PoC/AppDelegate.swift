@@ -15,6 +15,7 @@
 import UIKit
 import ZendeskSDKConversationKit
 import ZendeskSDKStorage
+import ZendeskSDKCoreUtilities
 
 // MARK: - 受害者 JWT (商家后端在真实场景签发; PoC 本地生成即可 — 我们只验证"发到哪")
 
@@ -121,14 +122,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         let params = SettingsParameters(config: config,
                                         featureFlagManager: FeatureFlagManager())   // 风险点 R1
-        kit = builder.build(with: params, callbackQueue: .main)
+        let theKit = builder.build(with: params, callbackQueue: .main)
+        kit = theKit
         vc.log("⑤ kit built — 等待 persistedUserRetrieved / 连接事件")
 
         // resume 按钮: 触发 realtime 重连 (re-auth 路径)
-        vc.onResumeHook = { [weak kit] in
-            kit?.pause()
-            kit?.resume()
-        }
+        vc.onResumeHook = { theKit?.pause(); theKit?.resume() }
 
         // 事件观察 — persistedUserRetrieved 直接展示"SDK 从持久化加载 User"
         kit?.addEventObserver(self) { [weak vc] event in
