@@ -94,7 +94,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
                              "maxConnectionAttempts":1,"connectionDelay":0,"enabled":true},
          "authentication":{"type":1,"token":"stale-token"}}
         """
-        let forged = try! JSONDecoder().decode(User.self, from: Data(forgedUserJSON.utf8))
+        let forged: User
+        do { forged = try JSONDecoder().decode(User.self, from: Data(forgedUserJSON.utf8)) }
+        catch { vc.log("✘ forged User decode 失败: \(error) — 中止"); return }
         vc.log("② forged User decoded via SDK Codable 通道 (User.init(from:))")
 
         // ③ 注入持久化存储 — 必须发生在 SDK 初始化之前 (SDK 启动时读持久化状态)
