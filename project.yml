@@ -1,0 +1,22 @@
+# project.yml â XcodeGen å·¥ç¨å®ä¹ (CI é brew install xcodegen && xcodegen çæ .xcodeproj)
+name: PoC
+options:
+  bundleIdPrefix: com.poc
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  PoC:
+    type: application
+    platform: iOS
+    sources:
+      - PoC
+    info:
+      path: PoC/Info.plist
+      properties:
+        CFBundleDisplayName: PoC
+        UILaunchScreen: {}
+        # âââ ç§æ·éæåæ° â å¨ GitHub Secrets ææ¬å°å¡«å¥çå®å¼ âââ
+        ZDK_APP_ID: REPLACE_WITH_APP_ID
+        ZDK_INTEGRATION_ID: REPLACE_WITH_INTEGRATION_ID
+        ZDK_BASE_URL: REPLACE_WITH_BASE_URL
+        ZDK_SETTINGS_BASE_URL: REPLACE_WITH_SETTINGS_BASE_URL
