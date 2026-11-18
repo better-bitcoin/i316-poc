@@ -49,7 +49,11 @@ jobs:
           DEV=$(xcrun simctl list devices available | grep -m1 'iPhone' | sed -E 's/^[[:space:]]*//; s/\([0-9A-Fa-f-]{36}\)//; s/\((Shutdown|Booted)\)//; s/[[:space:]]+$//')
           echo "using device: $DEV"
           xcrun simctl boot "$DEV" 2>/dev/null || true
+          echo waiting for boot...
+          xcrun simctl bootstatus "$DEV" -b
           xcrun simctl install booted dd/Build/Products/Debug-iphonesimulator/PoC.app
+          sleep 5
+          xcrun simctl listapps booted | head -10 || true
           nohup xcrun simctl io booted recordVideo --codec h264 poc-evidence.mp4 >/dev/null 2>&1 &
           echo $! > recorder.pid
           xcrun simctl launch booted com.poc.i316
