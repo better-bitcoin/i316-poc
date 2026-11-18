@@ -1,4 +1,4 @@
-# project.yml â XcodeGen å·¥ç¨å®ä¹ (CI é brew install xcodegen && xcodegen çæ .xcodeproj)
+# project.yml — XcodeGen 工程定义 (CI 里 brew install xcodegen && xcodegen 生成 .xcodeproj)
 name: PoC
 options:
   bundleIdPrefix: com.poc
@@ -15,7 +15,7 @@ targets:
       properties:
         CFBundleDisplayName: PoC
         UILaunchScreen: {}
-        # âââ ç§æ·éæåæ° â å¨ GitHub Secrets ææ¬å°å¡«å¥çå®å¼ âââ
+        # ↓↓↓ 租户集成参数 — 在 GitHub Secrets 或本地填入真实值 ↓↓↓
         ZDK_APP_ID: REPLACE_WITH_APP_ID
         ZDK_INTEGRATION_ID: REPLACE_WITH_INTEGRATION_ID
         ZDK_BASE_URL: REPLACE_WITH_BASE_URL
