@@ -1,14 +1,12 @@
-# .github/workflows/i316-poc.yml — i316 远程模拟器验证 (private repo 也可跑, 免费 macOS 额度够用)
+# .github/workflows/i316-poc.yml — i316 远程模拟器验证
 #
 # 已核实事实:
 #   - tag 15.2.0 的 xcframework 含 ios-arm64_x86_64-simulator slice (main 分支精简掉了)
 #   - podspec s.source = git tag 15.2.0 → pod install 拉即得官方模拟器 slice
-#   - macos-14 runner = Apple Silicon, Xcode 预装
+#   - macos-latest = Apple Silicon, Xcode 预装 (macos-14 标签已淘汰)
 #   - iOS 模拟器与 runner 宿主共享 loopback → app 连 127.0.0.1:18080 直达监听器
 #
 # 证据产出: poc-evidence.mp4 (模拟器屏幕录像) + captured-jwt.json + listener.log
-#
-# 使用方法: 放到仓库 .github/workflows/i316-poc.yml, Actions 页手动触发 (workflow_dispatch)
 
 name: i316-simulator-poc
 on:
@@ -17,7 +15,7 @@ on:
 
 jobs:
   poc:
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -39,17 +37,19 @@ jobs:
       - name: Build for iOS Simulator (免签名)
         run: |
           xcodebuild -workspace PoC.xcworkspace -scheme PoC \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath dd build CODE_SIGNING_ALLOWED=NO
 
       - name: Launch on headless simulator + record screen (证据视频)
         run: |
-          xcrun simctl boot "iPhone 15" 2>/dev/null || true
+          DEV=$(xcrun simctl list devices available | grep -m1 'iPhone' | sed -E 's/^[[:space:]]*//; s/\([0-9A-Fa-f-]{36}\)//; s/\((Shutdown|Booted)\)//; s/[[:space:]]+$//')
+          echo "using device: $DEV"
+          xcrun simctl boot "$DEV" 2>/dev/null || true
           xcrun simctl install booted dd/Build/Products/Debug-iphonesimulator/PoC.app
           nohup xcrun simctl io booted recordVideo --codec h264 poc-evidence.mp4 >/dev/null 2>&1 &
           echo $! > recorder.pid
           xcrun simctl launch booted com.poc.i316
-          sleep 120   # 留给 SDK 连接 + 观察者事件; 交互步骤 (点击按钮) 如需自动化用后续 simctl/XCUITest
+          sleep 120
 
       - name: Show capture result
         run: |
