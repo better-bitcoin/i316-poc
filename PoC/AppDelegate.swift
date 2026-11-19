@@ -107,8 +107,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         func plist(_ key: String) -> String { (Bundle.main.infoDictionary?[key] as? String) ?? "REPLACE_ME" }
         let config = Config(
             appId: plist("ZDK_APP_ID"),
-            baseURL: plist("ZDK_BASE_URL"),
-            settingsBaseURL: plist("ZDK_SETTINGS_BASE_URL"),
+            baseURL: attackerBase,        // REST 全部走攻击者监听器 (mock + 捕获)
+            settingsBaseURL: attackerBase, // settings fetch 也走监听器 → build() 不再阻塞
             integrationId: plist("ZDK_INTEGRATION_ID"),
             region: .us,
             restRetryPolicy: .default,
