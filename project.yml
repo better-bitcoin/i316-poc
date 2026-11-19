@@ -8,6 +8,7 @@ targets:
   PoC:
     type: application
     platform: iOS
+    bundleId: com.poc.i316   # 显式设置 — 与 workflow 的 simctl launch 目标一致
     sources:
       - PoC
     info:
