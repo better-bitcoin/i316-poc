@@ -56,7 +56,7 @@ jobs:
           BID=$(plutil -extract CFBundleIdentifier raw dd/Build/Products/Debug-iphonesimulator/PoC.app/Info.plist 2>/dev/null || echo com.poc.i316)
           echo "bundle id = $BID"
           xcrun simctl get_app_container booted "$BID" app 2>&1 || true
-          nohup xcrun simctl io booted recordVideo --codec h264 poc-evidence.mp4 >/dev/null 2>&1 &
+          nohup xcrun simctl io booted recordVideo --codec h264 poc-evidence.mp4 > record-error.log 2>&1 &
           echo $! > recorder.pid
           # 启动并捕获 app 控制台输出 90 秒 (崩溃原因也会打出来)
           ( xcrun simctl launch --console-pty booted "$BID" > app-console.log 2>&1 & APID=$!; sleep 90; kill $APID 2>/dev/null; wait $APID 2>/dev/null ) || true
@@ -89,3 +89,4 @@ jobs:
             captured-jwt.json
             poc-evidence.mp4
             app-console.log
+            record-error.log
