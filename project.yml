@@ -17,8 +17,8 @@ targets:
         CFBundleDisplayName: PoC
         CFBundleIdentifier: com.poc.i316
         UILaunchScreen: {}
-        # ↓↓↓ 租户集成参数 — 在 GitHub Secrets 或本地填入真实值 ↓↓↓
-        ZDK_APP_ID: REPLACE_WITH_APP_ID
-        ZDK_INTEGRATION_ID: REPLACE_WITH_INTEGRATION_ID
-        ZDK_BASE_URL: REPLACE_WITH_BASE_URL
-        ZDK_SETTINGS_BASE_URL: REPLACE_WITH_SETTINGS_BASE_URL
+        # ↓↓↓ 集成参数 — 格式必须合法(否则 SDK URL 强解包崩溃); appId 从租户 SunCo JWT 解出
+        ZDK_APP_ID: "27026516"
+        ZDK_INTEGRATION_ID: "00000000-0000-4000-8000-000000000000"
+        ZDK_BASE_URL: "https://api.smooch.io"
+        ZDK_SETTINGS_BASE_URL: "https://api.smooch.io"
