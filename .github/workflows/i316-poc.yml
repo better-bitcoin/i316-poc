@@ -64,12 +64,14 @@ jobs:
           tail -80 app-console.log || true
           # 再常驻启动一次 (若上一步因 console-pty 退出被杀)
           xcrun simctl launch booted "$BID" 2>&1 || true
+          sleep 20
+          echo "=== process alive? ==="
+          xcrun simctl spawn booted launchctl list 2>/dev/null | grep -i "poc" || echo "PROCESS NOT RUNNING"
           sleep 60
-          # 崩溃日志兜底
           echo "=== crash reports ==="
           ls -t ~/Library/Logs/DiagnosticReports/ 2>/dev/null | head -5 || true
-          LATEST=$(ls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -1)
-          if [ -n "$LATEST" ]; then grep -m1 -A3 '"exception"' "$LATEST" || head -40 "$LATEST"; fi
+          LATEST=$(ls -t ~/Library/Logs/DiagnosticReports/*PoC*.ips ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -1)
+          if [ -n "$LATEST" ]; then cp "$LATEST" ./crash-report.ips; echo "crash copied: $LATEST"; fi
 
       - name: Show capture result
         run: |
@@ -90,3 +92,4 @@ jobs:
             poc-evidence.mp4
             app-console.log
             record-error.log
+            crash-report.ips
