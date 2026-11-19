@@ -100,9 +100,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         catch { vc.log("✘ forged User decode 失败: \(error) — 中止"); return }
         vc.log("② forged User decoded via SDK Codable 通道 (User.init(from:))")
 
-        // ③ 注入持久化存储 — 必须发生在 SDK 初始化之前 (SDK 启动时读持久化状态)
-        vc.log("③ 注入持久化存储 (StorageBuilder, 候选键族) …")
-        PersistedUserInjector.injectForgedUser(forged) { s in vc.log(s) }
+        // ③ 注入持久化存储 — BINEXP: 由 Info.plist BINEXP_INJECT 控制 (默认关=对照实验)
+        let binInject = (Bundle.main.infoDictionary?["BINEXP_INJECT"] as? String) == "1"
+        vc.log("③ 注入持久化存储 (BINEXP_INJECT=\(binInject)) …")
+        if binInject {
+            PersistedUserInjector.injectForgedUser(forged) { s in vc.log(s) }
+        }
 
         // ④ 初始化 SDK — 观察 persistedUserRetrieved 是否命中伪造 User
         func plist(_ key: String) -> String { (Bundle.main.infoDictionary?[key] as? String) ?? "REPLACE_ME" }
