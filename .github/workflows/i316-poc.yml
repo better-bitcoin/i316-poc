@@ -68,9 +68,16 @@ jobs:
           echo "=== process alive? ==="
           xcrun simctl spawn booted launchctl list 2>/dev/null | grep -i "poc" || echo "PROCESS NOT RUNNING"
           sleep 60
+          # os_log 深诊断: ATS 拦截/连接失败/SDK 内部日志全在这
+          echo "=== app os_log (ATS/connection evidence) ==="
+          xcrun simctl spawn booted log show --last 4m --predicate 'processImagePath CONTAINS "PoC"' --style compact > app-oslog.txt 2>&1 || true
+          echo "--- os_log 中 ATS/connection 相关 ---"
+          grep -iE "App Transport|ATS|CFNetwork|NSURLError|connection|denied|blocked|failed" app-oslog.txt | head -40 || echo "(no matches)"
+          echo "=== listener port connections ==="
+          lsof -i :18080 2>/dev/null | head -10 || echo "(no connections to 18080)"
           echo "=== crash reports ==="
           ls -t ~/Library/Logs/DiagnosticReports/ 2>/dev/null | head -5 || true
-          LATEST=$(ls -t ~/Library/Logs/DiagnosticReports/*PoC*.ips ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -1)
+          LATEST=$(ls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -1)
           if [ -n "$LATEST" ]; then cp "$LATEST" ./crash-report.ips; echo "crash copied: $LATEST"; fi
 
       - name: Show capture result
@@ -93,3 +100,4 @@ jobs:
             app-console.log
             record-error.log
             crash-report.ips
+            app-oslog.txt
