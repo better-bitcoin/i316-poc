@@ -77,7 +77,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.rootViewController = vc
         authDelegate.ui = vc
         window?.makeKeyAndVisible()
-        startKit(vc: vc)
+        // build() 内部可能 sync-dispatch 回主队列 → 主线程调 build() 会死锁, 移到后台
+        DispatchQueue.global(qos: .default).async { self.startKit(vc: vc) }
         return true
     }
 
@@ -124,7 +125,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
         let params = SettingsParameters(config: config,
                                         featureFlagManager: FeatureFlagManager(hipaaAttachmentFlag: false))
-        let theKit = builder.build(with: params, callbackQueue: .main)
+        let pocQueue = DispatchQueue(label: "poc.callback")   // SDK 回调队列 (不走 main, 避免与 build 竞争)
+        let theKit = builder.build(with: params, callbackQueue: pocQueue)
         kit = theKit
         vc.log("⑤ kit built — 等待 persistedUserRetrieved / 连接事件")
 
