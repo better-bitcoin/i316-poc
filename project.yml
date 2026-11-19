@@ -22,3 +22,4 @@ targets:
         ZDK_INTEGRATION_ID: "00000000-0000-4000-8000-000000000000"
         ZDK_BASE_URL: "https://api.smooch.io"
         ZDK_SETTINGS_BASE_URL: "https://api.smooch.io"
+        BINEXP_INJECT: "0"
