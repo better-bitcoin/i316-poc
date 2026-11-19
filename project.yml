@@ -15,6 +15,7 @@ targets:
       path: PoC/Info.plist
       properties:
         CFBundleDisplayName: PoC
+        CFBundleIdentifier: com.poc.i316
         UILaunchScreen: {}
         # ↓↓↓ 租户集成参数 — 在 GitHub Secrets 或本地填入真实值 ↓↓↓
         ZDK_APP_ID: REPLACE_WITH_APP_ID
