@@ -50,14 +50,24 @@ jobs:
           echo "using device: $DEV"
           xcrun simctl boot "$DEV" 2>/dev/null || true
           echo waiting for boot...
-          xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl bootstatus "$DEV" -b || true
           xcrun simctl install booted dd/Build/Products/Debug-iphonesimulator/PoC.app
-          sleep 5
-          xcrun simctl listapps booted | head -10 || true
+          echo "--- app installed at: ---"
+          xcrun simctl get_app_container booted com.poc.i316 app 2>&1 || true
           nohup xcrun simctl io booted recordVideo --codec h264 poc-evidence.mp4 >/dev/null 2>&1 &
           echo $! > recorder.pid
-          xcrun simctl launch booted com.poc.i316
-          sleep 120
+          # 启动并捕获 app 控制台输出 90 秒 (崩溃原因也会打出来)
+          ( xcrun simctl launch --console-pty booted com.poc.i316 > app-console.log 2>&1 & APID=$!; sleep 90; kill $APID 2>/dev/null; wait $APID 2>/dev/null ) || true
+          echo "=== app console (crash reason if any) ==="
+          tail -80 app-console.log || true
+          # 再常驻启动一次 (若上一步因 console-pty 退出被杀)
+          xcrun simctl launch booted com.poc.i316 2>&1 || true
+          sleep 60
+          # 崩溃日志兜底
+          echo "=== crash reports ==="
+          ls -t ~/Library/Logs/DiagnosticReports/ 2>/dev/null | head -5 || true
+          LATEST=$(ls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -1)
+          if [ -n "$LATEST" ]; then grep -m1 -A3 '"exception"' "$LATEST" || head -40 "$LATEST"; fi
 
       - name: Show capture result
         run: |
