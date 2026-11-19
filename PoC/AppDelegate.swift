@@ -189,6 +189,7 @@ final class DemoVC: UIViewController {
     }
 
     func log(_ s: String) {
+        print("[poc] " + s)   // stdout → console-pty → app-console.log (CI 诊断)
         DispatchQueue.main.async {
             self.logView.text += s + "\n"
             let end = NSRange(location: self.logView.text.count - 1, length: 1)
