@@ -171,6 +171,16 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             theKit.getConversations(offset: 0, fromCache: true) { _ in }
             vc.log("⑦ resume + getConversations 已触发")
         }
+        vc.log("⑦b loginUser(真实 JWT) — 建立 SDK 会话")
+        theKit.loginUser(with: plist("ZDK_JWT")) { result in
+            switch result {
+            case .success(let u):
+                vc.log("✔ login 成功: id=\(u.id) externalId=\(u.externalId)")
+                vc.log("   realtime.baseURL=\(u.realtimeSettings.baseURL)")
+            case .failure(let e):
+                vc.log("✘ login 失败: \(e.localizedDescription)")
+            }
+        }
     }
 }
 
