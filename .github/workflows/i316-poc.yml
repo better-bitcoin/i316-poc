@@ -73,6 +73,11 @@ jobs:
           sleep 20
           echo "=== process alive? ==="
           xcrun simctl spawn booted launchctl list 2>/dev/null | grep -i "poc" || echo "PROCESS NOT RUNNING"
+          # 卡死线程调用栈 (一锤定音: build() 挂在哪)
+          SPID=$(pgrep -x PoC | head -1)
+          echo "sampling pid $SPID ..."
+          sample $SPID 5 -file sample-poc.txt 2>&1 | head -3 || true
+          grep -m1 -A 25 "Call graph" sample-poc.txt 2>/dev/null | head -30 || true
           sleep 60
           # os_log 深诊断: ATS 拦截/连接失败/SDK 内部日志全在这
           echo "=== app os_log (ATS/connection evidence) ==="
@@ -114,5 +119,6 @@ jobs:
             app-oslog.txt
             launch-diag.txt
             capture-diag.txt
+            sample-poc.txt
             wh-requests.json
             wh-requests-full.json
