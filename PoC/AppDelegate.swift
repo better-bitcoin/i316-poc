@@ -79,14 +79,12 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.makeKeyAndVisible()
         // FeatureFlagManager 便捷 init(hipaaAttachmentFlag:) 的默认参数生成器在 CI 模拟器
         // 环境永久阻塞(sample 铁证: 1089/1089 + 315/315 采样卡在 swift:46) —
-        // 绕过: 直接调用 8 参数完整 init (nm 符号 0x10e4, 纯赋值路径)
+        // 绕过: 直接调用 6 参数完整 init (编译器实证: 真实签名无 noAttachments/endSession)
         let ffm = FeatureFlagManager(
             hipaaAttachmentFlag: false,
             canUserSeeConversationList: false,
             isMultiConvoEnabled: false,
             canUserCreateMoreConversations: false,
-            noAttachmentsFlag: false,
-            endSessionFlag: false,
             showAIDisclaimer: false,
             brandFilteringFlag: false)
         // build() 内部可能 sync-dispatch 回主队列 → 主线程调 build() 会死锁, 移到后台
