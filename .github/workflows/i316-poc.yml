@@ -73,6 +73,13 @@ jobs:
           sleep 20
           echo "=== process alive? ==="
           xcrun simctl spawn booted launchctl list 2>/dev/null | grep -i "poc" || echo "PROCESS NOT RUNNING"
+          # FeatureFlagManager 符号面 (找不阻塞的 init 变体)
+          echo "=== nm FeatureFlagManager symbols ==="
+          CU_BIN=$(find dd/Build/Products/Debug-iphonesimulator -path "*ZendeskSDKCoreUtilities.framework/ZendeskSDKCoreUtilities" | head -1)
+          echo "CU_BIN=$CU_BIN"
+          nm -gU "$CU_BIN" 2>/dev/null | grep -i "FeatureFlagManager" | head -25 || true
+          echo "=== host featureflags daemons ==="
+          launchctl list 2>/dev/null | grep -iE "featureflag|eligibility" || echo "(none found)"
           # 卡死线程调用栈 (一锤定音: build() 挂在哪)
           SPID=$(pgrep -x PoC | head -1)
           echo "sampling pid $SPID ..."
