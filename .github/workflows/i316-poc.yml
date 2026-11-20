@@ -39,6 +39,9 @@ jobs:
       - name: Install SDK (tag 15.2.0, 含官方模拟器 slice)
         run: pod install
 
+      - name: Fix FeatureFlagManager init labels (自愈)
+        run: python3 fix-ffm.py || echo "fix-ffm skipped"
+
       - name: Dump FeatureFlagManager signature (诊断)
         if: always()
         run: grep -rn "FeatureFlagManager" Pods/ --include="*.swiftinterface" | head -20 || true
