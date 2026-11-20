@@ -86,7 +86,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             isMultiConvoEnabled: false,
             canUserCreateMoreConversations: false,
             showAIDisclaimer: false,
-            brandFilteringFlag: false)
+            brandFilteringEnabled: false)
         // build() 内部可能 sync-dispatch 回主队列 → 主线程调 build() 会死锁, 移到后台
         DispatchQueue.global(qos: .default).async { self.startKit(vc: vc, ffm: ffm) }
         return true
