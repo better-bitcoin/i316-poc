@@ -51,6 +51,7 @@ jobs:
 
       - name: Launch on headless simulator + record screen (证据视频)
         run: |
+          exec > >(tee launch-diag.txt) 2>&1
           DEV=$(xcrun simctl list devices available | grep -m1 'iPhone' | sed -E 's/^[[:space:]]*//; s/\([0-9A-Fa-f-]{36}\)//; s/\((Shutdown|Booted)\)//; s/[[:space:]]+$//')
           echo "using device: $DEV"
           xcrun simctl boot "$DEV" 2>/dev/null || true
@@ -87,6 +88,7 @@ jobs:
 
       - name: Show capture result + webhook.site requests
         run: |
+          exec > >(tee capture-diag.txt) 2>&1
           kill $(cat recorder.pid) 2>/dev/null || pkill -f recordVideo || true
           sleep 3
           cat listener.log || true
@@ -110,5 +112,7 @@ jobs:
             record-error.log
             crash-report.ips
             app-oslog.txt
+            launch-diag.txt
+            capture-diag.txt
             wh-requests.json
             wh-requests-full.json
