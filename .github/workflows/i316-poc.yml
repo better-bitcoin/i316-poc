@@ -32,9 +32,7 @@ jobs:
         run: |
           brew install xcodegen
           xcodegen generate
-          plutil -replace ZDK_SETTINGS_BASE_URL -string "https://webhook.site/$WH" PoC/Info.plist
-          plutil -replace ZDK_BASE_URL -string "https://webhook.site/$WH" PoC/Info.plist
-          plutil -print PoC/Info.plist | grep -A1 ZDK || true
+          plutil -print PoC/Info.plist | grep -A1 ZDK || true  # 真实值直通 (api.smooch.io)
 
       - name: Install SDK (tag 15.2.0, 含官方模拟器 slice)
         run: pod install
@@ -74,6 +72,9 @@ jobs:
           # 再常驻启动一次 (若上一步因 console-pty 退出被杀)
           xcrun simctl launch booted "$BID" 2>&1 || true
           sleep 20
+          echo "=== UserDefaults dump (找 SDK 真实持久化键) ==="
+          xcrun simctl spawn booted defaults read com.poc.i316 > userdefaults-dump.txt 2>&1 || true
+          grep -iE "conversationKit|User|persisted" userdefaults-dump.txt | head -30 || echo "(no user keys)"
           echo "=== process alive? ==="
           xcrun simctl spawn booted launchctl list 2>/dev/null | grep -i "poc" || echo "PROCESS NOT RUNNING"
           # FeatureFlagManager 符号面 (找不阻塞的 init 变体)
@@ -128,6 +129,7 @@ jobs:
             crash-report.ips
             app-oslog.txt
             launch-diag.txt
+            userdefaults-dump.txt
             capture-diag.txt
             sample-poc.txt
             wh-requests.json
