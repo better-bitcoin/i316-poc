@@ -167,8 +167,8 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         vc.log("⑥ 观察者就绪 — 触发状态加载")
         // 触发 SDK 持久化状态加载 (persistedUserRetrieved 的触发路径)
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            theKit?.resume()
-            theKit?.getConversations(offset: 0, fromCache: true) { _ in }
+            theKit.resume()
+            theKit.getConversations(offset: 0, fromCache: true) { _ in }
             vc.log("⑦ resume + getConversations 已触发")
         }
     }
