@@ -74,6 +74,13 @@ jobs:
           sleep 20
           echo "=== UserDefaults dump (找 SDK 真实持久化键) ==="
           xcrun simctl spawn booted defaults read com.poc.i316 > userdefaults-dump.txt 2>&1 || true
+          DATA=$(xcrun simctl get_app_container booted com.poc.i316 data 2>/dev/null || echo "")
+          if [ -n "$DATA" ]; then
+            find "$DATA/Library" -type f -name "*.plist" 2>/dev/null | head -20 > sandbox-plists.txt || true
+            find "$DATA/Library" -type f 2>/dev/null | grep -viE "\.css|\.png|Snapshots|LaunchCenter|Caches/[^/]*/(nsurl|com\.apple)" | head -40 > sandbox-files.txt || true
+            cp $(find "$DATA/Library/Preferences" -name "*.plist" 2>/dev/null | grep -v com.apple | head -3) ./zd-prefs-*.plist 2>/dev/null || true
+            for f in $(find "$DATA/Library/Preferences" -name "*.plist" 2>/dev/null | grep -v apple | head -3); do plutil -p "$f" >> zd-prefs-dump.txt 2>&1; done || true
+          fi
           grep -iE "conversationKit|User|persisted" userdefaults-dump.txt | head -30 || echo "(no user keys)"
           echo "=== process alive? ==="
           xcrun simctl spawn booted launchctl list 2>/dev/null | grep -i "poc" || echo "PROCESS NOT RUNNING"
@@ -130,6 +137,9 @@ jobs:
             app-oslog.txt
             launch-diag.txt
             userdefaults-dump.txt
+            sandbox-plists.txt
+            sandbox-files.txt
+            zd-prefs-dump.txt
             capture-diag.txt
             sample-poc.txt
             wh-requests.json
