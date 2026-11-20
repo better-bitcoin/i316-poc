@@ -24,4 +24,5 @@ targets:
         ZDK_INTEGRATION_ID: "6af8230e14db30882405934a"
         ZDK_BASE_URL: "https://api.smooch.io"
         ZDK_SETTINGS_BASE_URL: "https://api.smooch.io"
+        ZDK_JWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImFwcF82NDFjNzU4MTgxMzcwYTAxMTdiZjhhMGEifQ.eyJzY29wZSI6ImFwcFVzZXIiLCJleHRlcm5hbF9pZCI6ImZ1dHVyZUBidWdjcm93ZG5pbmphLmNvbV9femVuZGVza19fMjcwMjY1MTYiLCJleHAiOjE3OTUyNjE5OTQsImlhdCI6MTc5NTIxODc5NH0.8rCJR9AUpJzLIAOAL8uEZfVlsDZsDlMvp_S9wrIVUa8"
         BINEXP_INJECT: "1"
