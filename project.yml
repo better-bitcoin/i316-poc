@@ -20,8 +20,8 @@ targets:
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
         # ↓↓↓ 集成参数 — 格式必须合法(否则 SDK URL 强解包崩溃); appId 从租户 SunCo JWT 解出
-        ZDK_APP_ID: "27026516"
-        ZDK_INTEGRATION_ID: "00000000-0000-4000-8000-000000000000"
+        ZDK_APP_ID: "6af823004109e9e626c2716f"
+        ZDK_INTEGRATION_ID: "6af8230e14db30882405934a"
         ZDK_BASE_URL: "https://api.smooch.io"
         ZDK_SETTINGS_BASE_URL: "https://api.smooch.io"
         BINEXP_INJECT: "1"
