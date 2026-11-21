@@ -124,10 +124,10 @@ jobs:
 
       - name: os_log deep dump (独立 step)
         run: |
-  echo "=== app os_log (ATS/connection evidence) ==="
-  xcrun simctl spawn booted log show --last 4m --predicate 'processImagePath CONTAINS "PoC"' --style compact > app-oslog.txt 2>&1 || true
-  echo "--- os_log 中 ATS/connection 相关 ---"
-  grep -iE "App Transport|ATS|CFNetwork|NSURLError|connection|denied|blocked|failed" app-oslog.txt | head -40 || echo "(no matches)"
+          echo "=== app os_log (ATS/connection evidence) ==="
+          xcrun simctl spawn booted log show --last 4m --predicate 'processImagePath CONTAINS "PoC"' --style compact > app-oslog.txt 2>&1 || true
+          echo "--- os_log 中 ATS/connection 相关 ---"
+          grep -iE "App Transport|ATS|CFNetwork|NSURLError|connection|denied|blocked|failed" app-oslog.txt | head -40 || echo "(no matches)"
 
 
       - name: Upload evidence
