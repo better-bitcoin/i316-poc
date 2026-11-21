@@ -38,7 +38,7 @@ enum PersistedUserInjector {
     static func injectForgedUser(_ user: User, log: @escaping (String) -> Void) {
         // UserProcessor 持久化域 (二进制字符串实证) + 键 = 前缀 + userId
         let namespaces = ["com.zendesk.conversationkit.userprocessorlocaldatasource", "conversationKit", "com.zendesk.conversationKit", "conversationKitStorage"]
-        let keys = ["com.zendesk.conversationKit-User-u1", "com.zendesk.conversationKit-User-", "user", "currentUser"]
+        let keys = ["u1", "User-u1", "User-", "user", "currentUser"]
         for ns in namespaces {
             for st in [StorageType.basic, .complex] {
                 for key in keys {
