@@ -172,13 +172,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
             theKit.getConversations(offset: 0, fromCache: true) { _ in }
             vc.log("⑦ resume + getConversations 已触发")
         }
-        // 建立真实会话 → SDK 持久化用户状态 (供后续启动加载)
-        theKit.createAnonymousUser(with: "Victim", surname: "Alice") { result in
+        // 用真实 JWT 建立 SDK 会话 (先 login 后匿名创建)
+        theKit.loginUser(with: plist("ZDK_JWT")) { result in
             switch result {
             case .success(let u):
-                vc.log("✔ createAnonymousUser 成功: id=\(u.id) externalId=\(u.externalId)")
+                vc.log("✔ loginUser 成功: id=\(u.id) externalId=\(u.externalId)")
             case .failure(let e):
-                vc.log("✘ createAnonymousUser 失败: \(e.localizedDescription)")
+                vc.log("✘ loginUser 失败: \(e.localizedDescription)")
             }
         }
     }
