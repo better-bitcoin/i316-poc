@@ -22,7 +22,7 @@ targets:
         # ↓↓↓ 集成参数 — 格式必须合法(否则 SDK URL 强解包崩溃); appId 从租户 SunCo JWT 解出
         ZDK_APP_ID: "6af823004109e9e626c2716f"
         ZDK_INTEGRATION_ID: "6af8230e14db30882405934a"
-        ZDK_BASE_URL: "https://api.smooch.io"
-        ZDK_SETTINGS_BASE_URL: "https://api.smooch.io"
+        ZDK_BASE_URL: "https://support.zendesk.com/sc/sdk"
+        ZDK_SETTINGS_BASE_URL: "https://support.zendesk.com/sc/sdk"
         ZDK_JWT: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImFwcF82NDFjNzU4MTgxMzcwYTAxMTdiZjhhMGEifQ.eyJzY29wZSI6ImFwcFVzZXIiLCJleHRlcm5hbF9pZCI6ImZ1dHVyZUBidWdjcm93ZG5pbmphLmNvbV9femVuZGVza19fMjcwMjY1MTYiLCJleHAiOjE3OTUyNjE5OTQsImlhdCI6MTc5NTIxODc5NH0.8rCJR9AUpJzLIAOAL8uEZfVlsDZsDlMvp_S9wrIVUa8"
         BINEXP_INJECT: "1"
